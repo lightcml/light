@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔍 旅图资源搜索</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #f5f7fa;
+  min-height: 100vh;
+  color: #1f2329;
+}
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+/* Header */
+.header {
+  text-align: center;
+  padding: 48px 0 32px;
+}
+.header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1f2329;
+  margin-bottom: 8px;
+}
+.header p {
+  font-size: 14px;
+  color: #8f959e;
+}
+/* Search Box */
+.search-box {
+  position: relative;
+  margin-bottom: 24px;
+}
+.search-box input {
+  width: 100%;
+  height: 52px;
+  border: 2px solid #e5e6eb;
+  border-radius: 12px;
+  padding: 0 48px 0 20px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fff;
+}
+.search-box input:focus {
+  border-color: #3370ff;
+  box-shadow: 0 0 0 3px rgba(51,112,255,0.12);
+}
+.search-box input::placeholder { color: #c0c4cc; }
+.search-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  color: #8f959e;
+}
+/* Category Filter */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.filter-tag {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid #e5e6eb;
+  background: #fff;
+  color: #646a73;
+  transition: all 0.15s;
+  user-select: none;
+}
+.filter-tag:hover { border-color: #3370ff; color: #3370ff; }
+.filter-tag.active { background: #3370ff; color: #fff; border-color: #3370ff; }
+/* Stats */
+.stats {
+  font-size: 13px;
+  color: #8f959e;
+  margin-bottom: 16px;
+  padding-left: 4px;
+}
+.stats span { color: #3370ff; font-weight: 500; }
+/* Results */
+.results { display: flex; flex-direction: column; gap: 10px; }
+.result-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px 20px;
+  border: 1px solid #e5e6eb;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.result-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  border-color: #3370ff;
+}
+.result-name {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #1f2329;
+  line-height: 1.5;
+}
+.result-name mark {
+  background: #ffe066;
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+.result-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.result-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.tag-category { background: #eff4ff; color: #3370ff; }
+.tag-quark { background: #fff7e6; color: #d48806; }
+.tag-baidu { background: #e6f7ff; color: #1890ff; }
+.tag-uc { background: #f0f5ff; color: #597ef7; }
+.tag-other { background: #f5f5f5; color: #8c8c8c; }
+/* Empty State */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #8f959e;
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty p { font-size: 15px; }
+/* Suggestion chips */
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.suggest-chip {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid #e5e6eb;
+  color: #646a73;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.suggest-chip:hover { border-color: #3370ff; color: #3370ff; background: #f0f5ff; }
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 40px 0 24px;
+  font-size: 12px;
+  color: #c0c4cc;
+}
+/* Mobile */
+@media (max-width: 480px) {
+  .header { padding: 32px 0 20px; }
+  .header h1 { font-size: 22px; }
+  .result-card { padding: 12px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🔍 旅图资源搜索</h1>
+    <p>输入关键字，搜索你需要的资源</p>
+  </div>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="搜索资源名称、分类…" autofocus>
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+  </div>
+  <div class="filters" id="filters"></div>
+  <div class="stats" id="stats"></div>
+  <div id="resultsArea">
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">💡</div>
+      <p>试试搜索：英语、数学、中医、副业…</p>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+    <div class="results" id="results" style="display:none"></div>
+  </div>
+  <div class="footer">旅图资源 · 共 <span id="totalCount">0</span> 项资源</div>
+</div>
+<script>
+const DATA=[{"n":"初中科目电子课本","u":"https://pan.quark.cn/s/b32acd0acd4b","c":"初中教育","d":"夸克网盘"},{"n":"2026版初中《53初中知识清单》初中9科全套","u":"https://pan.quark.cn/s/aa2506be24eb","c":"初中教育","d":"夸克网盘"},{"n":"2026版初中《一本必背文言文+古诗默写》789年级","u":"https://pan.quark.cn/s/e557a1a6e8af","c":"初中教育","d":"夸克网盘"},{"n":"豆包指令八大类型提示词合集","u":"https://pan.quark.cn/s/4292f12f67cd","c":"AI提示词","d":"夸克网盘"},{"n":"提示词指令大合集","u":"https://pan.baidu.com/s/1whj2B4QrOsFqqCXjrY7RlA?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"AI写小说指令","u":"https://pan.baidu.com/s/1jug-Azdr13joL9Gpa3XHlw?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"小红书爆款文案","u":"https://pan.baidu.com/s/1rzJ2oElFFiB_Dr1Z2ri8Rw?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"洞天奥旨中医古籍全书：陈士铎奇症验方秘典","u":"https://pan.quark.cn/s/8cdac6519289","c":"中医古籍","d":"夸克网盘"},{"n":"刘力红《思考中医》音频课","u":"https://pan.quark.cn/s/a757009546ec","c":"中医教程","d":"夸克网盘"},{"n":"中药炮制技术-浙江医药高等专科学校【杨雄志】","u":"https://pan.quark.cn/s/5c04137bb77d","c":"中医教程","d":"夸克网盘"},{"n":"《名校名医100套中医课程教程》(629G)","u":"https://pan.quark.cn/s/7e1b4abe5fc6","c":"中医教程","d":"夸克网盘"},{"n":"倪海厦中医教程全集","u":"https://pan.quark.cn/s/4f97a82b8ff7","c":"中医教程","d":"夸克网盘"},{"n":"中医全息舌诊 吴春梅","u":"https://pan.quark.cn/s/39ff3f213b61","c":"中医教程","d":"夸克网盘"},{"n":"中医诊断学：朱文锋-湖南中医药大学","u":"https://pan.quark.cn/s/d259af4c1179","c":"中医教程","d":"夸克网盘"},{"n":"《中华食物养生大全》","u":"https://pan.quark.cn/s/41666d7e2d93","c":"健康养生","d":"夸克网盘"},{"n":"2025实体变现终局私域高客单","u":"https://pan.quark.cn/s/1ed0357a3888","c":"副业变现","d":"夸克网盘"},{"n":"世界现代兵器库套装","u":"https://pan.quark.cn/s/795698e73024","c":"行业书籍","d":"夸克网盘"},{"n":"效率译丛绝版旧书（12册）","u":"https://pan.quark.cn/s/5b0e049c9d40","c":"行业书籍","d":"夸克网盘"},{"n":"种殖养殖技术书籍大全","u":"https://pan.quark.cn/s/93e91c0cc26e","c":"职业教育","d":"夸克网盘"},{"n":"《传统文化修身智慧》[金海峰]","u":"https://pan.quark.cn/s/67694a112f3c","c":"哲学思想","d":"夸克网盘"},{"n":"《我在北京送快递》","u":"https://pan.quark.cn/s/d6140758149a","c":"文学小说","d":"夸克网盘"},{"n":"全国古琴大赛金奖冠军子博《古琴指法63讲+干货70讲》","u":"https://pan.quark.cn/s/46faae1bf648","c":"休闲娱乐","d":"夸克网盘"},{"n":"钢琴课程资料汇总","u":"https://pan.quark.cn/s/d95f15d37d51","c":"休闲娱乐","d":"夸克网盘"},{"n":"500套字帖大全 电子字帖练字","u":"https://pan.quark.cn/s/a3fcc32b8bfe","c":"休闲娱乐","d":"夸克网盘"},{"n":"21天摄影构图能力养成计划","u":"https://pan.quark.cn/s/727e04558e7d","c":"休闲娱乐","d":"夸克网盘"},{"n":"热汗舞蹈","u":"https://pan.quark.cn/s/a4b1d6263e66","c":"兴趣休闲","d":"夸克网盘"},{"n":"自媒体运营文案系列1","u":"https://pan.quark.cn/s/37104a3fe36f","c":"副业变现","d":"夸克网盘"},{"n":"做菜教程","u":"https://pan.quark.cn/s/6bcb237579e7","c":"美食烹饪","d":"夸克网盘"},{"n":"商用凉拌菜教程","u":"https://pan.quark.cn/s/5d79ddc866fc","c":"美食烹饪","d":"夸克网盘"},{"n":"华莱士炸鸡汉堡技术配方","u":"https://pan.quark.cn/s/5dfc1ec7f9f8","c":"美食烹饪","d":"夸克网盘"},{"n":"腌油辣椒技术配方","u":"https://pan.quark.cn/s/ae4897764646","c":"美食烹饪","d":"夸克网盘"},{"n":"夸人绝学好嘴成就好命","u":"https://pan.quark.cn/s/07d454e29b48","c":"生活技能","d":"夸克网盘"},{"n":"历朝历代野史秘史超全合集","u":"https://pan.quark.cn/s/f0aa17183ec9","c":"历史地理","d":"夸克网盘"},{"n":"公园景观滨水滨河湿地规划","u":"https://pan.quark.cn/s/6cd44ee2fa5c","c":"职业教育","d":"夸克网盘"},{"n":"摄影视频教程","u":"https://pan.quark.cn/s/4cd51be7d7fb","c":"休闲娱乐","d":"夸克网盘"},{"n":"瑜伽健美教程合集","u":"https://pan.quark.cn/s/6bef28494df3","c":"健康养生","d":"夸克网盘"},{"n":"10节课学会美食短视频脚本创作","u":"https://pan.quark.cn/s/0c6759cd6e4d","c":"副业变现","d":"夸克网盘"},{"n":"AI公众号爆文变现训练营","u":"https://pan.quark.cn/s/efb250cdf88f","c":"副业变现","d":"夸克网盘"},{"n":"摆地摊全套教程从入门到精通","u":"https://pan.quark.cn/s/df5b030bf28a","c":"副业变现","d":"夸克网盘"},{"n":"厚黑学智慧全集","u":"https://pan.quark.cn/s/175a9b6ab4e4","c":"哲学思想","d":"夸克网盘"},{"n":"【幼小衔接】国学启蒙篇","u":"https://pan.quark.cn/s/fca79e65b987","c":"幼儿教育","d":"夸克网盘"},{"n":"【幼小衔接】控笔练字篇","u":"https://pan.quark.cn/s/06262d0e1ae0","c":"幼儿教育","d":"夸克网盘"},{"n":"【幼小衔接】拼音启蒙篇","u":"https://pan.quark.cn/s/160da7973eaf","c":"幼儿教育","d":"夸克网盘"},{"n":"【幼小衔接】数学启蒙篇","u":"https://pan.quark.cn/s/0279e59f6497","c":"幼儿教育","d":"夸克网盘"},{"n":"【幼小衔接】识字启蒙篇","u":"https://pan.quark.cn/s/e526a6e406d7","c":"幼儿教育","d":"夸克网盘"},{"n":"【幼小衔接】学前测试卷","u":"https://pan.quark.cn/s/7326dc0be357","c":"幼儿教育","d":"夸克网盘"},{"n":"【幼小衔接】学习计划表","u":"https://pan.quark.cn/s/85f6284767a7","c":"幼儿教育","d":"夸克网盘"},{"n":"【幼小衔接】专注力训练","u":"https://pan.quark.cn/s/1280928b1bb6","c":"幼儿教育","d":"夸克网盘"},{"n":"珠心算视频教程 少儿童手指快算速算","u":"https://pan.quark.cn/s/6e81109c8db8","c":"幼儿教育","d":"夸克网盘"},{"n":"奥数（动画视频）","u":"https://pan.quark.cn/s/423d62b2e880","c":"幼儿教育","d":"夸克网盘"},{"n":"儿童科普启蒙动画《爱迪帮帮忙 Addison (中文版) 》","u":"https://pan.quark.cn/s/cc2a5a8c63de","c":"幼儿教育","d":"夸克网盘"},{"n":"国学科普动画片《中国成语故事365》","u":"https://pan.quark.cn/s/69303c44e698","c":"幼儿教育","d":"夸克网盘"},{"n":"经典英语启蒙分级读物《饼干狗 Biscuit (视频+音频+绘本) 》","u":"https://pan.quark.cn/s/7abb2aa7f6d3","c":"幼儿教育","d":"夸克网盘"},{"n":"看动画学物理【142集】","u":"https://pan.quark.cn/s/9fbfdbe7bf79","c":"幼儿教育","d":"夸克网盘"},{"n":"专注力视频课程（视频+练习）","u":"https://pan.quark.cn/s/7fe35f39860a","c":"幼儿教育","d":"夸克网盘"},{"n":"超火的儿童科普动画《奇妙的世界》120集全","u":"https://pan.quark.cn/s/62a30a06e0fc","c":"幼儿教育","d":"夸克网盘"},{"n":"100个亲子情境英语","u":"https://pan.quark.cn/s/83d11bc2c361","c":"幼儿教育","d":"夸克网盘"},{"n":"洪恩全集：Hello Teddy洪恩幼儿英语启蒙+汉字+数学+拼音","u":"https://pan.quark.cn/s/36de1c72f27d","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0051让孩子轻松说出地道英语","u":"https://pan.quark.cn/s/04fc8e0b2eb3","c":"幼儿教育","d":"夸克网盘"},{"n":"【英语启蒙规划】清华妈妈家长课","u":"https://pan.quark.cn/s/6f5e9387d58c","c":"幼儿教育","d":"夸克网盘"},{"n":"绘本故事2000+精选大全 一天一个启蒙小故事","u":"https://pan.quark.cn/s/29e88e58439c","c":"幼儿教育","d":"夸克网盘"},{"n":"孩子成长课外读物合集","u":"https://pan.quark.cn/s/3c293b3361a0","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0047大红妈妈解忧绘本馆","u":"https://pan.quark.cn/s/012b9912f4b0","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0043超级宝宝“学商”私教课","u":"https://pan.quark.cn/s/a99a242e12b2","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0044从零开始做父母","u":"https://pan.quark.cn/s/ac0de578b1c4","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0045陈默：如何做不焦虑的家长","u":"https://pan.quark.cn/s/5487026d3a36","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0046崔玉涛育学园育儿指南","u":"https://pan.quark.cn/s/e77e424fd99e","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0050培育高智商宝宝，父母必修108课","u":"https://pan.quark.cn/s/5cf59c383969","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0052托德老师讲儿童心理学","u":"https://pan.quark.cn/s/8e6081076003","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0053小事情撬动孩子大能力","u":"https://pan.quark.cn/s/c421fc4d8b24","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0054张怡筠亲子情商课","u":"https://pan.quark.cn/s/2d3da44392fa","c":"幼儿教育","d":"夸克网盘"},{"n":"幼儿园家长会PPT25套","u":"https://pan.quark.cn/s/fa1689778e63","c":"幼儿教育","d":"夸克网盘"},{"n":"BBC儿童运动启蒙节目《I Can Do It，You Can Too (全两季) 》","u":"https://pan.quark.cn/s/a004a6a82a24","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0048科幻世界","u":"https://pan.quark.cn/s/ebb41436aa4e","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0049科学队长，孩子耳边的科学家","u":"https://pan.quark.cn/s/0e1521ff3d59","c":"幼儿教育","d":"夸克网盘"},{"n":"幼儿早教经典儿歌合集【MP3】","u":"https://pan.quark.cn/s/73279f2b3667","c":"幼儿教育","d":"夸克网盘"},{"n":"LK0012.2026作业帮网课 初一 初二 初三","u":"https://pan.quark.cn/s/6fe3cbbff14d","c":"小学教育","d":"夸克网盘"},{"n":"LK0016小学数学动画课程《大智与呆呆动漫数学》","u":"https://pan.quark.cn/s/ccc3e3ddeeb8","c":"小学教育","d":"夸克网盘"},{"n":"LK0017小学全套课程学习资料(视频+讲义)","u":"https://pan.quark.cn/s/7fdd88f74f31","c":"小学教育","d":"夸克网盘"},{"n":"LK0055豆神大语文写作直播课","u":"https://pan.quark.cn/s/cab9eb8d3b25","c":"小学教育","d":"夸克网盘"},{"n":"LK0056【电子课本】小学科目","u":"https://pan.quark.cn/s/61e00baca023","c":"小学教育","d":"夸克网盘"},{"n":"2026版初中《53初中知识清单》初中9科全套（适配新教材）","u":"https://pan.quark.cn/s/aa2506be24eb","c":"初中教育","d":"夸克网盘"},{"n":"2026版初中《一本必背文言文+古诗默写》789年级（语文）","u":"https://pan.quark.cn/s/e557a1a6e8af","c":"初中教育","d":"夸克网盘"},{"n":"2026《王后雄·高考预测卷》（高考）（新增湖南、江西、重庆、浙江版）","u":"https://pan.quark.cn/s/daf26db9d4e2","c":"高中教育","d":"夸克网盘"},{"n":"高考数学点睛密卷","u":"https://pan.quark.cn/s/aadb2ef4eead","c":"高中教育","d":"夸克网盘"},{"n":"高考物理必须熟记的75个结论","u":"https://pan.quark.cn/s/639d73851177","c":"高中教育","d":"夸克网盘"},{"n":"高中教辅汇总(35GB)","u":"https://pan.quark.cn/s/c112c8230ffc","c":"高中教育","d":"夸克网盘"},{"n":"高中数学全套课程视频（180节）","u":"https://pan.quark.cn/s/b5075c30f982","c":"高中教育","d":"夸克网盘"},{"n":"高中科目电子课本","u":"https://pan.quark.cn/s/b4cdb9e6869a","c":"高中教育","d":"夸克网盘"},{"n":"雅思9400词（学习版、复习版、词汇表、漫画版）","u":"https://pan.quark.cn/s/f4dae7dd4b71","c":"大学研究生","d":"夸克网盘"},{"n":"电脑维修技术","u":"https://pan.quark.cn/s/74e1411a4a28","c":"职业教育","d":"夸克网盘"},{"n":"电器维修技术","u":"https://pan.quark.cn/s/a15734127712","c":"职业教育","d":"夸克网盘"},{"n":"水电工技术","u":"https://pan.quark.cn/s/f1c1377b6bfb","c":"职业教育","d":"夸克网盘"},{"n":"PLC编程学习课程资料合集","u":"https://pan.baidu.com/s/1eeT_stVJ02JzBoECQMR1tg?pwd=7qp7","c":"职业教育","d":"百度网盘"},{"n":"果树种植技术","u":"https://pan.quark.cn/s/5d70b91a124b","c":"职业教育","d":"夸克网盘"},{"n":"家禽养殖技术","u":"https://pan.quark.cn/s/13fb51959c30","c":"职业教育","d":"夸克网盘"},{"n":"公园景观滨水湿地规划设计方案","u":"https://pan.quark.cn/s/6cd44ee2fa5c","c":"职业教育","d":"夸克网盘"},{"n":"刘畊宏健身视频","u":"https://pan.quark.cn/s/f93c51702ae5","c":"瑜伽健美","d":"夸克网盘"},{"n":"欧阳春晓塑形健身大合集","u":"https://pan.quark.cn/s/62034414fd02","c":"瑜伽健美","d":"夸克网盘"},{"n":"懒人科学健身法","u":"https://pan.quark.cn/s/d009c4c5613b","c":"瑜伽健美","d":"夸克网盘"},{"n":"21天健身轻食计划（完结）","u":"https://pan.quark.cn/s/35cc8dc8131a","c":"瑜伽健美","d":"夸克网盘"},{"n":"零基础减脂塑形课程（完结）","u":"https://pan.quark.cn/s/dd035ae76377","c":"瑜伽健美","d":"夸克网盘"},{"n":"科学减肥16讲（完结）","u":"https://pan.quark.cn/s/2895ad91befc","c":"瑜伽健美","d":"夸克网盘"},{"n":"28天高效瘦身计划","u":"https://pan.quark.cn/s/7f8fac434d14","c":"瑜伽健美","d":"夸克网盘"},{"n":"如阴瑜伽","u":"https://pan.quark.cn/s/62ea8cce6e92","c":"瑜伽健美","d":"夸克网盘"},{"n":"阴瑜伽-女性排毒养颜","u":"https://pan.quark.cn/s/27cd07004cde","c":"瑜伽健美","d":"夸克网盘"},{"n":"21天瑜伽减肥训练营","u":"https://pan.quark.cn/s/03bbf98b7db3","c":"瑜伽健美","d":"夸克网盘"},{"n":"15分钟瑜伽操","u":"https://pan.quark.cn/s/f9e28c057a67","c":"瑜伽健美","d":"夸克网盘"},{"n":"四季养生瑜伽","u":"https://pan.quark.cn/s/0e5d8c900e4f","c":"瑜伽健美","d":"夸克网盘"},{"n":"武当道家五行气功+开胯八段锦","u":"https://pan.baidu.com/s/1Yca__iXO1dKaSisTbXHYEQ?pwd=pich","c":"瑜伽健美","d":"百度网盘"},{"n":"《临床诊疗指南全集》47册","u":"https://pan.quark.cn/s/c37b8fd5da5d","c":"医学资料","d":"夸克网盘"},{"n":"哈里森内科学(15版、16版)","u":"https://pan.quark.cn/s/4dc9e85c0fd6","c":"医学资料","d":"夸克网盘"},{"n":"《实用内科学》(14版、15版)","u":"https://pan.quark.cn/s/bac168693762","c":"医学资料","d":"夸克网盘"},{"n":"全套规培教材高清彩色扫描版","u":"https://pan.quark.cn/s/c527de2cf170","c":"医学资料","d":"夸克网盘"},{"n":"《奈特图谱》","u":"https://pan.quark.cn/s/67a5cbbffb72","c":"医学资料","d":"夸克网盘"},{"n":"《医学笔记》35本","u":"https://pan.quark.cn/s/e4316070dcd2","c":"医学资料","d":"夸克网盘"},{"n":"医学类学习指导和习题集","u":"https://pan.quark.cn/s/d6ccfc655574","c":"医学资料","d":"夸克网盘"},{"n":"医学教材","u":"https://pan.quark.cn/s/def0b548ffb3","c":"医学资料","d":"夸克网盘"},{"n":"医学生宝典","u":"https://pan.quark.cn/s/b7c4bfd7da97","c":"医学资料","d":"夸克网盘"},{"n":"专科专病经方论治丛书","u":"https://pan.quark.cn/s/7f06b4800e9c","c":"医学资料","d":"夸克网盘"},{"n":"张锡纯医学全书","u":"https://pan.quark.cn/s/2cebc49b36c4","c":"医学资料","d":"夸克网盘"},{"n":"精选医学电子书41本","u":"https://pan.quark.cn/s/ce3a42a32394","c":"医学资料","d":"夸克网盘"},{"n":"《大学中医课本》36套","u":"https://pan.quark.cn/s/0b9d9a69062d","c":"医学资料","d":"夸克网盘"},{"n":"东洋医学善本丛书","u":"https://pan.quark.cn/s/5b8bb1b616b9","c":"医学资料","d":"夸克网盘"},{"n":"癸巳新刊御薬院方","u":"https://pan.quark.cn/s/e275d2cfdb9a","c":"医学资料","d":"夸克网盘"},{"n":"新安医籍丛刊 医经类","u":"https://pan.quark.cn/s/931dc37335a1","c":"医学资料","d":"夸克网盘"},{"n":"新安医籍珍本善本选校丛刊","u":"https://pan.quark.cn/s/99f5ded8a9ad","c":"医学资料","d":"夸克网盘"},{"n":"新刊万病回春","u":"https://pan.quark.cn/s/7a359e2a1eb6","c":"医学资料","d":"夸克网盘"},{"n":"新刊外科正宗","u":"https://pan.quark.cn/s/2d4aa77879a1","c":"医学资料","d":"夸克网盘"},{"n":"仙拈集","u":"https://pan.quark.cn/s/baf6b2de5e74","c":"医学资料","d":"夸克网盘"},{"n":"瀛经堂详校医宗必读","u":"https://pan.quark.cn/s/4d4f58663bd4","c":"医学资料","d":"夸克网盘"},{"n":"医林","u":"https://pan.quark.cn/s/1f1f3d43e89e","c":"医学资料","d":"夸克网盘"},{"n":"医门秘旨","u":"https://pan.quark.cn/s/de3427a42625","c":"医学资料","d":"夸克网盘"},{"n":"药性单方","u":"https://pan.quark.cn/s/fee68dd34519","c":"医学资料","d":"夸克网盘"},{"n":"医学集要","u":"https://pan.quark.cn/s/7084a4c5c834","c":"医学资料","d":"夸克网盘"},{"n":"古籍医书","u":"https://pan.quark.cn/s/05c8671cabec","c":"医学资料","d":"夸克网盘"},{"n":"医书类","u":"https://pan.quark.cn/s/b6d87fe3ab66","c":"医学资料","d":"夸克网盘"},{"n":"本草纲目 李时珍","u":"https://pan.quark.cn/s/e613b808f2c1","c":"医学资料","d":"夸克网盘"},{"n":"中国古医籍整理丛书","u":"https://pan.quark.cn/s/7b5f882f699e","c":"医学资料","d":"夸克网盘"},{"n":"中国医籍通考","u":"https://pan.quark.cn/s/61361077a9e9","c":"医学资料","d":"夸克网盘"},{"n":"百病良方","u":"https://pan.quark.cn/s/67c66a528993","c":"医学资料","d":"夸克网盘"},{"n":"秘方合集","u":"https://pan.quark.cn/s/942c6dbfe6e8","c":"医学资料","d":"夸克网盘"},{"n":"秘方偏方","u":"https://pan.quark.cn/s/c2539aa2b161","c":"医学资料","d":"夸克网盘"},{"n":"全国名老中医秘方","u":"https://pan.quark.cn/s/776041c7eb00","c":"医学资料","d":"夸克网盘"},{"n":"中医典籍医著秘方偏方土方","u":"https://pan.quark.cn/s/c53cb08c3a88","c":"医学资料","d":"夸克网盘"},{"n":"中国中医秘方大全","u":"https://pan.quark.cn/s/72b4da6e2151","c":"医学资料","d":"夸克网盘"},{"n":"中医专病专治秘方精要","u":"https://pan.quark.cn/s/a437520f1303","c":"医学资料","d":"夸克网盘"},{"n":"中医金方系列","u":"https://pan.quark.cn/s/ec6df28d0a98","c":"医学资料","d":"夸克网盘"},{"n":"万病回春 · 太平圣惠方校注等古方","u":"https://pan.quark.cn/s/9fd1b154dbb2","c":"医学资料","d":"夸克网盘"},{"n":"萬氏家鈔濟世良方","u":"https://pan.quark.cn/s/b7493f3a2096","c":"医学资料","d":"夸克网盘"},{"n":"东垣先生试效方","u":"https://pan.quark.cn/s/936bb689954a","c":"医学资料","d":"夸克网盘"},{"n":"十便良方","u":"https://pan.quark.cn/s/178a9ed48455","c":"医学资料","d":"夸克网盘"},{"n":"删补颐生微论","u":"https://pan.quark.cn/s/6aea23f98b53","c":"医学资料","d":"夸克网盘"},{"n":"世补斋医书续集","u":"https://pan.quark.cn/s/83d6af3bfeaa","c":"医学资料","d":"夸克网盘"},{"n":"难病奇方系列丛书","u":"https://pan.quark.cn/s/d30c1e2fba55","c":"医学资料","d":"夸克网盘"},{"n":"汉方对疑难症之治疗","u":"https://pan.quark.cn/s/ae1bd669f3cd","c":"医学资料","d":"夸克网盘"},{"n":"《中华传世医典》系列12册","u":"https://pan.quark.cn/s/7f60d05dc0ff","c":"医学资料","d":"夸克网盘"},{"n":"《中医药物集成》系列24册","u":"https://pan.quark.cn/s/d696985cddbc","c":"医学资料","d":"夸克网盘"},{"n":"《中国本草彩色图鉴》系列3册","u":"https://pan.quark.cn/s/572153d7e06e","c":"医学资料","d":"夸克网盘"},{"n":"祝由全套","u":"https://pan.quark.cn/s/206ccfd33b0c","c":"医学资料","d":"夸克网盘"},{"n":"倪海厦中医教程全集【精整私藏版】","u":"https://pan.quark.cn/s/4f97a82b8ff7","c":"医学资料","d":"夸克网盘"},{"n":"《倪海厦书籍》扫描版5册","u":"https://pan.quark.cn/s/2060c1a553e4","c":"医学资料","d":"夸克网盘"},{"n":"老中医坐堂","u":"https://pan.quark.cn/s/9455b626a955","c":"医学资料","d":"夸克网盘"},{"n":"名医讲坛","u":"https://pan.quark.cn/s/9cd1f0b1aa54","c":"医学资料","d":"夸克网盘"},{"n":"中国医术名家精华丛书","u":"https://pan.quark.cn/s/723b1c600986","c":"医学资料","d":"夸克网盘"},{"n":"《现代著名老中医名著丛书》71册","u":"https://pan.quark.cn/s/eaa60223e48e","c":"医学资料","d":"夸克网盘"},{"n":"《中国现代百名中医临床家》143套","u":"https://pan.quark.cn/s/daba20e4bc5e","c":"医学资料","d":"夸克网盘"},{"n":"《巴蜀名医遗珍丛书》系列20册","u":"https://pan.quark.cn/s/d51d2692f4f3","c":"医学资料","d":"夸克网盘"},{"n":"重订古今名医临证金鉴","u":"https://pan.quark.cn/s/416f96c95c7e","c":"医学资料","d":"夸克网盘"},{"n":"中医药传奇","u":"https://pan.quark.cn/s/4cc6fc190c05","c":"医学资料","d":"夸克网盘"},{"n":"孙思邈","u":"https://pan.quark.cn/s/8495894d9028","c":"医学资料","d":"夸克网盘"},{"n":"《医案大全》系列463套","u":"https://pan.quark.cn/s/ba04f147f1d4","c":"医学资料","d":"夸克网盘"},{"n":"中医全息舌诊 吴春梅（字幕版）","u":"https://pan.quark.cn/s/39ff3f213b61","c":"医学资料","d":"夸克网盘"},{"n":"中医诊断学：朱文锋-湖南中医药大学（全75集）","u":"https://pan.quark.cn/s/d259af4c1179","c":"医学资料","d":"夸克网盘"},{"n":"中药炮制技术-浙江医药高等专科学校【杨雄志】（51讲完整版）","u":"https://pan.quark.cn/s/5c04137bb77d","c":"医学资料","d":"夸克网盘"},{"n":"明清针灸秘法丛书","u":"https://pan.quark.cn/s/8d95ddae8d6b","c":"医学资料","d":"夸克网盘"},{"n":"中国针灸大辞典","u":"https://pan.quark.cn/s/39aa8e62fe18","c":"医学资料","d":"夸克网盘"},{"n":"最全高清人体穴位图及穴位图解大全","u":"https://pan.quark.cn/s/021d175897d9","c":"医学资料","d":"夸克网盘"},{"n":"《针灸》10套","u":"https://pan.quark.cn/s/96465c7ff3e6","c":"医学资料","d":"夸克网盘"},{"n":"《中医高清脉学和经络图》","u":"https://pan.quark.cn/s/097ad144c52a","c":"医学资料","d":"夸克网盘"},{"n":"千金舌诊系统班22集高清","u":"https://pan.quark.cn/s/e8312bb49248","c":"医学资料","d":"夸克网盘"},{"n":"《中华医学四诊全书》系列4套","u":"https://pan.quark.cn/s/33e9fe6ab8f7","c":"医学资料","d":"夸克网盘"},{"n":"推拿手法用力技巧（音频）","u":"https://pan.quark.cn/s/102d3d8bb839","c":"医学资料","d":"夸克网盘"},{"n":"道地药材图典","u":"https://pan.quark.cn/s/c7b676d13a65","c":"医学资料","d":"夸克网盘"},{"n":"黔版中草药彩色图谱","u":"https://pan.quark.cn/s/2a5c576fbb53","c":"医学资料","d":"夸克网盘"},{"n":"中草药野外识别手册","u":"https://pan.quark.cn/s/05b775f306d7","c":"医学资料","d":"夸克网盘"},{"n":"中华人民共和国药典中药材及原植物彩色图鉴","u":"https://pan.quark.cn/s/7a24e58017f8","c":"医学资料","d":"夸克网盘"},{"n":"植物活性成分辞典","u":"https://pan.quark.cn/s/6e87a49b9034","c":"医学资料","d":"夸克网盘"},{"n":"最新中草药真伪鉴别实用大全","u":"https://pan.quark.cn/s/2e5d80cb37d0","c":"医学资料","d":"夸克网盘"},{"n":"2025国家卫健委减肥食谱PDF完整版","u":"https://pan.quark.cn/s/63a4eb3de7a7","c":"医学资料","d":"夸克网盘"},{"n":"卫健委发布的营养指南","u":"https://pan.quark.cn/s/e38e36ef2b3a","c":"医学资料","d":"夸克网盘"},{"n":"《黄帝内经》系列203套","u":"https://pan.quark.cn/s/525af5ebb1b0","c":"医学资料","d":"夸克网盘"},{"n":"《伤寒论》系列96套","u":"https://pan.quark.cn/s/819d9e69551b","c":"医学资料","d":"夸克网盘"},{"n":"《金匮要略》系列65套","u":"https://pan.quark.cn/s/cf11b7660df9","c":"医学资料","d":"夸克网盘"},{"n":"温病大成","u":"https://pan.quark.cn/s/521694b8e964","c":"医学资料","d":"夸克网盘"},{"n":"中医大辞典","u":"https://pan.quark.cn/s/4779969b0e1f","c":"医学资料","d":"夸克网盘"},{"n":"中医类课程笔记图解合辑（10册）","u":"https://pan.quark.cn/s/98dde732c664","c":"医学资料","d":"夸克网盘"},{"n":"中医古籍临床新用丛书","u":"https://pan.quark.cn/s/d5f63dbb2c59","c":"医学资料","d":"夸克网盘"},{"n":"中医绝版书籍-合集","u":"https://pan.quark.cn/s/8f2a4c771709","c":"医学资料","d":"夸克网盘"},{"n":"《自学中医之路丛书》系列16册","u":"https://pan.quark.cn/s/41fb22e53979","c":"医学资料","d":"夸克网盘"},{"n":"自学中医之路丛书","u":"https://pan.quark.cn/s/39092190990c","c":"医学资料","d":"夸克网盘"},{"n":"健康养生书籍与视频合集","u":"https://pan.quark.cn/s/6bef28494df3","c":"医学资料","d":"夸克网盘"},{"n":"补肾壮阳资料合集","u":"https://pan.quark.cn/s/00af6ac51e5b","c":"医学资料","d":"夸克网盘"},{"n":"赤脚医生手册48册PDF绝版书籍","u":"https://pan.quark.cn/s/5fd28ce7fe7e","c":"医学资料","d":"夸克网盘"},{"n":"太医院、中草药野外识别手册、中国医科大学 急诊医学 全16讲","u":"https://pan.quark.cn/s/8fbe08799dbd","c":"医学资料","d":"夸克网盘"},{"n":"癌症良方","u":"https://pan.quark.cn/s/8ba27cba732d","c":"医学资料","d":"夸克网盘"},{"n":"另一版新刻重校增补圆机活法","u":"https://pan.quark.cn/s/31d16467ec31","c":"医学资料","d":"夸克网盘"},{"n":"新鐫五福萬壽丹書","u":"https://pan.quark.cn/s/f9b437da291c","c":"医学资料","d":"夸克网盘"},{"n":"500套字帖大全 电子字帖 练字","u":"https://pan.quark.cn/s/a3fcc32b8bfe","c":"休闲娱乐","d":"夸克网盘"},{"n":"摄影课程资料汇总","u":"https://pan.quark.cn/s/608baa7cddc5","c":"休闲娱乐","d":"夸克网盘"},{"n":"摄影实战课","u":"https://pan.baidu.com/s/1kYmlAedcjxXt-XdtHtI-yA?pwd=hvfy","c":"休闲娱乐","d":"百度网盘"},{"n":"手机摄影课","u":"https://pan.baidu.com/s/16CeG_XucSWcPOLqv-cs7jA?pwd=hvfy","c":"休闲娱乐","d":"百度网盘"},{"n":"快乐随手拍，摄影就该走起来","u":"https://pan.baidu.com/s/1OgfYBZZPumkOVvGisP1gFA?pwd=hvfy","c":"休闲娱乐","d":"百度网盘"},{"n":"十分绘画：绘画萌新入门创造营（零基础系统进阶板绘大神）","u":"https://pan.quark.cn/s/ca5a42bd3209","c":"休闲娱乐","d":"夸克网盘"},{"n":"付费课程-让说话有\"逻辑\"","u":"https://pan.quark.cn/s/6cd3d7878f05","c":"生活技能","d":"夸克网盘"},{"n":"《老实人防坑指南》：避开70个吃亏上当陷阱的处世智慧","u":"https://pan.quark.cn/s/407a553b6225","c":"生活技能","d":"夸克网盘"},{"n":"夸人绝学 高情商赞美他人话术","u":"https://pan.quark.cn/s/07d454e29b48","c":"生活技能","d":"夸克网盘"},{"n":"人生翻盘运用手册","u":"https://pan.quark.cn/s/9e8e8e4d50ec","c":"生活技能","d":"夸克网盘"},{"n":"生活小窍门电子书合集","u":"https://pan.quark.cn/s/43ec3db92f15","c":"生活技能","d":"夸克网盘"},{"n":"灾难、应急、求生、手册","u":"https://pan.quark.cn/s/bcb6de8fc093","c":"生活技能","d":"夸克网盘"},{"n":"发型打理教程合集 让自己看起来超级帅","u":"https://drive.uc.cn/s/118918e3fc6e4","c":"生活技能","d":"UC网盘"},{"n":"英语分级阅读资源","u":"https://pan.baidu.com/s/1eOhB6ZKMtzreBTvFQuFogA?pwd=xdcn","c":"语言学习","d":"百度网盘"},{"n":"股票投资书籍合集·炒股技术电子书大全","u":"https://pan.quark.cn/s/1128c22bdf04","c":"股票基金","d":"夸克网盘"},{"n":"股票投资教程·无门问禅经典趋势操盘术《十倍趋势牛股战法》","u":"https://pan.quark.cn/s/1c1bcb23bf3b","c":"股票基金","d":"夸克网盘"},{"n":"【股票教程】合集","u":"https://pan.quark.cn/s/f8043089737d","c":"股票基金","d":"夸克网盘"},{"n":"一统天下看盘法","u":"https://pan.baidu.com/s/1Qskj2woBYyOh21KV5zyp3A?pwd=e3ej","c":"股票基金","d":"百度网盘"},{"n":"科大财经Quant量化金融【进阶班】","u":"https://pan.quark.cn/s/0499e94fddeb","c":"股票基金","d":"夸克网盘"},{"n":"邢不行-Python股票量化投资课程（完结）","u":"https://pan.quark.cn/s/41cd39e7b0f0","c":"股票基金","d":"夸克网盘"},{"n":"经济学思维30讲","u":"https://pan.quark.cn/s/4a9b30e9c506","c":"理财知识","d":"夸克网盘"},{"n":"韭菜的自我修养（李笑来首次公开投资原则）","u":"https://pan.quark.cn/s/41f97995b9d6","c":"理财知识","d":"夸克网盘"},{"n":"香帅中国财富报告（2023-2024）","u":"https://pan.quark.cn/s/3b5a50514909","c":"理财知识","d":"夸克网盘"},{"n":"金钱自由第一课：\"钱包\"管理","u":"https://pan.quark.cn/s/e6d39fb4cbf7","c":"理财知识","d":"夸克网盘"},{"n":"阮思乔用股权撬动财富","u":"https://pan.quark.cn/s/2fe7f0bf4445","c":"理财知识","d":"夸克网盘"},{"n":"用搜索提升收入，掌握最热门的职场技能（完结）","u":"https://pan.quark.cn/s/001a72c983f8","c":"理财知识","d":"夸克网盘"},{"n":"有钱人的共识 精英人群传阅开悟神书《醒与悟》","u":"https://pan.quark.cn/s/11b95dc3c3d3","c":"理财知识","d":"夸克网盘"},{"n":"生财有术·付费资源","u":"https://pan.quark.cn/s/56b13f2e55e4","c":"副业变现","d":"夸克网盘"},{"n":"百家号带货野路子玩法","u":"https://pan.quark.cn/s/e48b093f1fb6","c":"电商运营","d":"夸克网盘"},{"n":"快手引流创业粉","u":"https://pan.quark.cn/s/861c34903ec3","c":"电商运营","d":"夸克网盘"},{"n":"媒体运营","u":"https://pan.quark.cn/s/7e74d1cbbf8f","c":"电商运营","d":"夸克网盘"},{"n":"全新蓝海赛道·淘宝虚拟类目","u":"https://pan.quark.cn/s/901f7b71007f","c":"电商运营","d":"夸克网盘"},{"n":"淘宝开店0基础全套视频","u":"https://pan.quark.cn/s/d6a503b9f736","c":"电商运营","d":"夸克网盘"},{"n":"抖音快手小红书好物分享实操课","u":"https://pan.baidu.com/s/1bO3HTbAW8V6kBKYPbZTlxw?pwd=9zy6","c":"电商运营","d":"百度网盘"},{"n":"抖音快手小红书生活妙招最全资料","u":"https://pan.baidu.com/s/1aMKT9nPqNfJw6m9o7G20zQ?pwd=9zy6","c":"电商运营","d":"百度网盘"},{"n":"电商运营表格合集","u":"https://pan.quark.cn/s/1074a28a6a57","c":"电商运营","d":"夸克网盘"},{"n":"电商26个赚钱项目教程合集","u":"https://pan.baidu.com/s/1SsH3F1SXxQrkjFZ0kkx-PA?pwd=gttt","c":"电商运营","d":"百度网盘"},{"n":"2026人民日报推荐的48本书","u":"https://pan.quark.cn/s/b464d84f7155","c":"其他合集","d":"夸克网盘"},{"n":"超百万人点赞的神书","u":"https://pan.quark.cn/s/ae3a9aabca38","c":"其他合集","d":"夸克网盘"},{"n":"人民日报推荐人生必读的70本书","u":"https://pan.quark.cn/s/b4e3ec77afa7","c":"其他合集","d":"夸克网盘"},{"n":"世界顶级畅销书900本","u":"https://pan.quark.cn/s/257262cac647","c":"其他合集","d":"夸克网盘"},{"n":"绝版书30本第2弹","u":"https://pan.baidu.com/s/148bobg_cORVTzRkX7PdNDg?pwd=xdcn","c":"其他合集","d":"百度网盘"},{"n":"掌阅精品出版书籍（3600册）","u":"https://pan.quark.cn/s/23feb65db206","c":"其他合集","d":"夸克网盘"},{"n":"《哈利·波特》1-7部有声书全集","u":"https://pan.quark.cn/s/353618589f7e","c":"其他合集","d":"夸克网盘"},{"n":"天下无谋秘卷13本","u":"https://pan.baidu.com/s/1UgoTq2Ppqa4PyiEETzpGCQ?pwd=xdcn","c":"其他合集","d":"百度网盘"},{"n":"人际关系处理17本","u":"https://pan.baidu.com/s/1lCbeEiFXpoukFh68zAvToA?pwd=xdcn","c":"其他合集","d":"百度网盘"},{"n":"百本经典世界文学名著","u":"https://pan.quark.cn/s/2c3c56bec121","c":"文学小说","d":"夸克网盘"},{"n":"中国古典文学名著100部珍藏版","u":"https://pan.quark.cn/s/a9f9b7a672b3","c":"文学小说","d":"夸克网盘"},{"n":"豆瓣书本TOP400合集","u":"https://pan.quark.cn/s/6608bfc94adb","c":"文学小说","d":"夸克网盘"},{"n":"豆瓣top好书","u":"https://pan.quark.cn/s/ee8d8a786034","c":"文学小说","d":"夸克网盘"},{"n":"世界22本名著","u":"https://pan.baidu.com/s/16v5XKUDsXaWPNDqOCqt24g?pwd=xdcn","c":"文学小说","d":"百度网盘"},{"n":"中国古典诗词大全","u":"https://pan.baidu.com/s/1aXMpfmYCJisOTtlmbBNYYQ?pwd=2up2","c":"文学小说","d":"百度网盘"},{"n":"商业","u":"https://pan.quark.cn/s/a7133492c3dd","c":"行业书籍","d":"夸克网盘"},{"n":"管理","u":"https://pan.quark.cn/s/624960630252","c":"行业书籍","d":"夸克网盘"},{"n":"研管","u":"https://pan.quark.cn/s/4eac3b0a3bf7","c":"行业书籍","d":"夸克网盘"},{"n":"职场","u":"https://pan.quark.cn/s/edce22a7bb1b","c":"行业书籍","d":"夸克网盘"},{"n":"销售","u":"https://pan.quark.cn/s/d72df95e0964","c":"行业书籍","d":"夸克网盘"},{"n":"营销","u":"https://pan.quark.cn/s/1e481ea3e1cb","c":"行业书籍","d":"夸克网盘"},{"n":"产品","u":"https://pan.quark.cn/s/0778f24b2823","c":"行业书籍","d":"夸克网盘"},{"n":"效率","u":"https://pan.quark.cn/s/aeec6d9f3fd8","c":"行业书籍","d":"夸克网盘"},{"n":"经济","u":"https://pan.quark.cn/s/b45bfa6e77b8","c":"行业书籍","d":"夸克网盘"},{"n":"金融","u":"https://pan.quark.cn/s/f27a10e9c8a2","c":"行业书籍","d":"夸克网盘"},{"n":"理财","u":"https://pan.quark.cn/s/49cde9e5cc5a","c":"行业书籍","d":"夸克网盘"},{"n":"财务","u":"https://pan.quark.cn/s/a4bca0f2c1db","c":"行业书籍","d":"夸克网盘"},{"n":"统计","u":"https://pan.quark.cn/s/e8df0c482b8c","c":"行业书籍","d":"夸克网盘"},{"n":"编程","u":"https://pan.quark.cn/s/2d76fc83d7a4","c":"行业书籍","d":"夸克网盘"},{"n":"数据","u":"https://pan.quark.cn/s/6e0b08f8de82","c":"行业书籍","d":"夸克网盘"},{"n":"设计","u":"https://pan.quark.cn/s/f47e07e8a3d7","c":"行业书籍","d":"夸克网盘"},{"n":"文学","u":"https://pan.quark.cn/s/5ae9f7a24c27","c":"行业书籍","d":"夸克网盘"},{"n":"小说","u":"https://pan.quark.cn/s/62a09f2e7c2b","c":"行业书籍","d":"夸克网盘"},{"n":"写作","u":"https://pan.quark.cn/s/d29f12e58e14","c":"行业书籍","d":"夸克网盘"},{"n":"摄影","u":"https://pan.quark.cn/s/3c7a79e00e71","c":"行业书籍","d":"夸克网盘"},{"n":"绘画","u":"https://pan.quark.cn/s/3be1a7d3ea8e","c":"行业书籍","d":"夸克网盘"},{"n":"哲学","u":"https://pan.quark.cn/s/16f7da3b3a08","c":"行业书籍","d":"夸克网盘"},{"n":"心理","u":"https://pan.quark.cn/s/a59ef6f9f3bd","c":"行业书籍","d":"夸克网盘"},{"n":"社科","u":"https://pan.quark.cn/s/0bae34bb9a6b","c":"行业书籍","d":"夸克网盘"},{"n":"历史","u":"https://pan.quark.cn/s/37d97e4b2b9c","c":"行业书籍","d":"夸克网盘"},{"n":"传记","u":"https://pan.quark.cn/s/a1ed7fc6680c","c":"行业书籍","d":"夸克网盘"},{"n":"通俗心理学百科合集（套装共18册）","u":"https://pan.quark.cn/s/e24529de042e","c":"行业书籍","d":"夸克网盘"},{"n":"埃隆·马斯克传","u":"https://pan.quark.cn/s/c2ade802ce28","c":"行业书籍","d":"夸克网盘"},{"n":"想突破人际关系吗？三本书帮你拿捏社交的冷热度边界感！","u":"https://pan.quark.cn/s/d1d1d354d58b","c":"行业书籍","d":"夸克网盘"},{"n":"英语","u":"https://pan.quark.cn/s/59ec0d37f575","c":"行业书籍","d":"夸克网盘"},{"n":"演讲","u":"https://pan.quark.cn/s/01a2e8b5f89c","c":"行业书籍","d":"夸克网盘"},{"n":"社交","u":"https://pan.quark.cn/s/a7e4b6f9c3d7","c":"行业书籍","d":"夸克网盘"},{"n":"学习","u":"https://pan.quark.cn/s/d3a7e4f5b6c8","c":"行业书籍","d":"夸克网盘"},{"n":"教育","u":"https://pan.quark.cn/s/e4b5c6d7a8f9","c":"行业书籍","d":"夸克网盘"},{"n":"思维","u":"https://pan.quark.cn/s/f5c6d7e8a9b0","c":"行业书籍","d":"夸克网盘"},{"n":"励志","u":"https://pan.quark.cn/s/a6b7c8d9e0f1","c":"行业书籍","d":"夸克网盘"},{"n":"生活","u":"https://pan.quark.cn/s/b7c8d9e0f1a2","c":"行业书籍","d":"夸克网盘"},{"n":"z男手册","u":"https://pan.quark.cn/s/84abecca3d68","c":"行业书籍","d":"夸克网盘"},{"n":"《强者的处世术》：90年代绝版处世奇书","u":"https://pan.quark.cn/s/b35a56999223","c":"行业书籍","d":"夸克网盘"},{"n":"易经类","u":"https://pan.quark.cn/s/f063eb5c5d95","c":"古籍秘籍","d":"夸克网盘"},{"n":"连山易","u":"https://pan.quark.cn/s/e8b08a5ab1e8","c":"古籍秘籍","d":"夸克网盘"},{"n":"推背图","u":"https://pan.quark.cn/s/0e9ee1f64661","c":"古籍秘籍","d":"夸克网盘"},{"n":"易经相关书籍汇总","u":"https://pan.quark.cn/s/9beb3e40920b","c":"古籍秘籍","d":"夸克网盘"},{"n":"道家","u":"https://pan.quark.cn/s/93d614721d8b","c":"古籍秘籍","d":"夸克网盘"},{"n":"道教类","u":"https://pan.quark.cn/s/ed3a14a992e6","c":"古籍秘籍","d":"夸克网盘"},{"n":"吕祖全书（总六十四卷）","u":"https://pan.quark.cn/s/470c7500a9c6","c":"古籍秘籍","d":"夸克网盘"},{"n":"张至顺道长全集","u":"https://pan.quark.cn/s/69e602df618c","c":"古籍秘籍","d":"夸克网盘"},{"n":"南怀瑾老师全集","u":"https://pan.baidu.com/s/1hIpddo6zgSl3MjC6SsuG8w?pwd=xdcn","c":"古籍秘籍","d":"百度网盘"},{"n":"佛教类","u":"https://pan.quark.cn/s/8829de3b4fcd","c":"古籍秘籍","d":"夸克网盘"},{"n":"中华大藏经","u":"https://pan.quark.cn/s/d251ec43c5c2","c":"古籍秘籍","d":"夸克网盘"},{"n":"禅门逸书","u":"https://pan.quark.cn/s/2479b73478f4","c":"古籍秘籍","d":"夸克网盘"},{"n":"真宗全书","u":"https://pan.quark.cn/s/bce3489e316b","c":"古籍秘籍","d":"夸克网盘"},{"n":"风水类","u":"https://pan.quark.cn/s/604d34d9f681","c":"古籍秘籍","d":"夸克网盘"},{"n":"中国神秘文化典籍类编","u":"https://pan.quark.cn/s/a3a6e0476bdf","c":"古籍秘籍","d":"夸克网盘"},{"n":"风水国学易学等学习课程资料合集","u":"https://pan.baidu.com/s/1R-XTFXwEeNvDOxEl2MLK7Q?pwd=dz7c","c":"古籍秘籍","d":"百度网盘"},{"n":"永乐大典","u":"https://pan.quark.cn/s/a8966be24332","c":"古籍秘籍","d":"夸克网盘"},{"n":"古代生活类","u":"https://pan.quark.cn/s/2d6b740218b8","c":"古籍秘籍","d":"夸克网盘"},{"n":"古图类","u":"https://pan.quark.cn/s/57de91dd1cb3","c":"古籍秘籍","d":"夸克网盘"},{"n":"鬱岡齋筆塵（郁冈斋笔麈）","u":"https://pan.quark.cn/s/f8ff8171dd71","c":"古籍秘籍","d":"夸克网盘"},{"n":"敦煌遗书","u":"https://pan.quark.cn/s/e10467be8fb1","c":"古籍秘籍","d":"夸克网盘"},{"n":"敦煌遗书中的《天地阴阳交欢大乐赋》原图扫描版","u":"https://pan.quark.cn/s/790b431ec133","c":"古籍秘籍","d":"夸克网盘"},{"n":"中华再造善本·唐宋编（758册）","u":"https://pan.quark.cn/s/cdfae31a908f","c":"古籍秘籍","d":"夸克网盘"},{"n":"历朝历代野史秘史合集","u":"https://pan.quark.cn/s/f0aa17183ec9","c":"古籍秘籍","d":"夸克网盘"},{"n":"红色历史合集","u":"https://pan.quark.cn/s/e9d0c9c37cbf","c":"历史地理","d":"夸克网盘"},{"n":"易中天品三国（全52+5集）","u":"https://pan.quark.cn/s/e56806789900","c":"历史地理","d":"夸克网盘"},{"n":"2025九三阅兵资料包","u":"https://pan.quark.cn/s/c950358d423e","c":"历史地理","d":"夸克网盘"},{"n":"红色故事","u":"https://pan.baidu.com/s/160mrYqVQMKr0CwXZ8mpJtw?pwd=2up2","c":"历史地理","d":"百度网盘"},{"n":"谜案里的宋朝史","u":"https://pan.quark.cn/s/bdf25d987688","c":"历史地理","d":"夸克网盘"},{"n":"地理中的历史：亚洲为什么是今天这样？","u":"https://pan.quark.cn/s/abb9c063ac59","c":"历史地理","d":"夸克网盘"},{"n":"全国地市可编辑地图","u":"https://pan.quark.cn/s/15224ceb82ce","c":"历史地理","d":"夸克网盘"},{"n":"哲学100问（三季全）","u":"https://pan.quark.cn/s/2f74d3534319","c":"哲学思想","d":"夸克网盘"},{"n":"佛学与心理治疗40讲","u":"https://pan.quark.cn/s/cb490c6c1afd","c":"哲学思想","d":"夸克网盘"},{"n":"解读天道（完结）","u":"https://pan.quark.cn/s/ee6c19474270","c":"哲学思想","d":"夸克网盘"},{"n":"225部欧美动画片","u":"https://pan.baidu.com/s/1tudACvthR5RCOZTxiRC44Q?pwd=rh39","c":"电影资源","d":"百度网盘"},{"n":"宫崎骏","u":"https://pan.baidu.com/s/1ebvsowjy-LyMFtDuwmfqQg?pwd=rh39","c":"电影资源","d":"百度网盘"},{"n":"动画片怪兽上班10集","u":"https://pan.baidu.com/s/1P-UZniycuzA0bDYeukRrhg?pwd=rh39","c":"电影资源","d":"百度网盘"},{"n":"《背尸人》悬疑恐怖 主播酒沏茶 744集完","u":"https://pan.quark.cn/s/ec5e532fba0b","c":"电影资源","d":"夸克网盘"},{"n":"车载U盘-极品车载歌曲资源包","u":"https://pan.quark.cn/s/99c2d167cf7b","c":"音乐资源","d":"夸克网盘"},{"n":"视频特效素材","u":"https://pan.baidu.com/s/1BvqctJ3naGyi4mw7bcTQZA?pwd=9zy6","c":"视频素材","d":"百度网盘"},{"n":"抖音快手小红书历史人物故事素材","u":"https://pan.baidu.com/s/1tFXcz__7h4aJ3_VrbdflCA?pwd=9zy6","c":"视频素材","d":"百度网盘"},{"n":"抖音快手历史人物视频资料素材","u":"https://pan.baidu.com/s/1JKQ7X6wnGordSAB8VG08IQ?pwd=9zy6","c":"视频素材","d":"百度网盘"},{"n":"Bigfilms特效视频素材大全","u":"https://pan.baidu.com/s/1gsjtKdeEDPrMF6Yt5hpGag?pwd=9zy6","c":"视频素材","d":"百度网盘"},{"n":"著名山川视频素材","u":"https://pan.baidu.com/s/1cQTKtYE7KYWmaaHw992EDA?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"春天绿色视频素材","u":"https://pan.baidu.com/s/1J8O8TppBTlM4l6qzNpLkLw?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"城市景观视频素材","u":"https://pan.baidu.com/s/1_U2cb6wB8kXx-PM042qakA?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"动物视频素材","u":"https://pan.baidu.com/s/15K2bgQzq31pq5c3hISymOg?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"冬天白色视频素材","u":"https://pan.baidu.com/s/1wwxIQPHjLeEc93eTNcqTeA?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"海洋视频素材","u":"https://pan.baidu.com/s/1dZCjJmR7LS05FTqDSG0ezw?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"瀑布视频素材","u":"https://pan.baidu.com/s/1_VSCBw4clH_rO9ZilKHyBQ?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"湖水倒影视频素材","u":"https://pan.baidu.com/s/1rf7HzdKbFTP2y11tyebgVQ?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"家园故乡视频素材","u":"https://pan.baidu.com/s/1A974iRIRSVGkKAHWj3npPQ?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"视频素材","u":"https://pan.baidu.com/s/1K936_rO7LiQGFHi6__H_JQ?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"秋天黄视频素材","u":"https://pan.baidu.com/s/1jV3RbxBHVLQWtZfKuj3XwQ?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"梯田视频素材","u":"https://pan.baidu.com/s/11cDKCGueuDdXbvYddHajdg?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"树林视频素材","u":"https://pan.baidu.com/s/1dZCjJmR7LS05FTqDSG0ezw?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"雨天视频素材","u":"https://pan.baidu.com/s/1vk65jFXzH26uqqiq-OBaUQ?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"月色视频素材","u":"https://pan.baidu.com/s/1sUa1--9TG7HfySbmz51ClA?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"阳光视频素材","u":"https://pan.baidu.com/s/1ixFCy4nU2birSUr1hA72Jg?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"夏天蓝色视频素材","u":"https://pan.baidu.com/s/1dU-mvzB9VcOISqHieZksZw?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"植物视频素材","u":"https://pan.baidu.com/s/1Ep9LQSdovLvkwJAzUz5XGQ?pwd=2dj7","c":"视频素材","d":"百度网盘"},{"n":"160个高清云山水视频素材","u":"https://pan.baidu.com/s/1jn2LuyTPHz85UQZs17aR3A?pwd=7vgg","c":"视频素材","d":"百度网盘"},{"n":"5000字民间故事小说指令","u":"https://pan.baidu.com/s/1YhJM3em5deDnPCqZys8MeQ?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"AI生成散文","u":"https://pan.baidu.com/s/1gzVF5UdIxE9RB7FknnSycg?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"AI辅助高效写公文","u":"https://pan.baidu.com/s/1-roJFNSi7SpxMT2kS0HS0w?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"小红书种草类文案","u":"https://pan.baidu.com/s/1SJEif9Awe2AU7TJq5je8Vw?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"爆款短视频脚本文案","u":"https://pan.baidu.com/s/17r2zT_qyY3-ZT2T6UF3nmw?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"微头条10种框架文案","u":"https://pan.baidu.com/s/1h6qfrKO-5AlyoIuGMEXtUA?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"暖心治愈情感文案（十种框架五种风格）","u":"https://pan.baidu.com/s/1ZmSC7jDp_cO2wCW8ZuOQNg?pwd=3avz","c":"AI提示词","d":"百度网盘"},{"n":"6个月零基础学会英语","u":"https://pan.quark.cn/s/70df9ca2838a","c":"语言学习","d":"夸克网盘"},{"n":"趣味英语100说","u":"https://pan.quark.cn/s/a19df6cc6d4e","c":"语言学习","d":"夸克网盘"},{"n":"日语课程资料汇总","u":"https://pan.quark.cn/s/5c91e2c64d74","c":"语言学习","d":"夸克网盘"},{"n":"36个小而美的赚钱金点子","u":"https://pan.quark.cn/s/6b64c08add93","c":"副业变现","d":"夸克网盘"},{"n":"2023年最新450个搞钱玩法合集","u":"https://pan.quark.cn/s/218cdc8bb3b3","c":"副业变现","d":"夸克网盘"},{"n":"下班后易学易做100个赚钱小生意","u":"https://pan.quark.cn/s/c7ee0b838c9d","c":"副业变现","d":"夸克网盘"},{"n":"网络赚钱1008个项目（每周更新）","u":"https://pan.baidu.com/s/1x3exiwnVvjbWTW9rZj4fJQ?pwd=7qp7","c":"副业变现","d":"百度网盘"},{"n":"赚钱搞钱电子书全集","u":"https://pan.baidu.com/s/17h4HLl1Z2AFqLf8DTgihyw?pwd=xdcn","c":"副业变现","d":"百度网盘"},{"n":"2026视频号漫画故事新风口","u":"https://pan.quark.cn/s/b547f1c25797","c":"副业变现","d":"夸克网盘"},{"n":"2026最新视频号银发经济玩法","u":"https://pan.quark.cn/s/1105f89146b6","c":"副业变现","d":"夸克网盘"},{"n":"百分百去重玩法，轻松一键搬运","u":"https://pan.quark.cn/s/ca1deeeb5da1","c":"副业变现","d":"夸克网盘"},{"n":"表情包日入1500+项目实操教学","u":"https://pan.quark.cn/s/d9e206feae59","c":"副业变现","d":"夸克网盘"},{"n":"AI故事说古文短视频（110万博主保姆级教学）","u":"https://pan.quark.cn/s/220ac6348f4b","c":"副业变现","d":"夸克网盘"},{"n":"老高AI漫剧制作全流程","u":"https://pan.quark.cn/s/a5ac8933d4cc","c":"副业变现","d":"夸克网盘"},{"n":"卖298的颜值剪辑起号教学课程","u":"https://pan.quark.cn/s/5c96d70ef892","c":"副业变现","d":"夸克网盘"},{"n":"利用巴铁维修视频赚支付宝分成计划收益","u":"https://pan.quark.cn/s/20a48ac67971","c":"副业变现","d":"夸克网盘"},{"n":"利用微信朋友圈强提醒功能引流创业粉","u":"https://pan.quark.cn/s/98d3f3840da3","c":"副业变现","d":"夸克网盘"},{"n":"抖音图文赛道教学","u":"https://pan.quark.cn/s/d33ca186d126","c":"副业变现","d":"夸克网盘"},{"n":"视频号带货，中老年人赛道","u":"https://pan.quark.cn/s/d30ebdd4b8ce","c":"副业变现","d":"夸克网盘"},{"n":"自媒体运营文案系列","u":"https://pan.quark.cn/s/37104a3fe36f","c":"副业变现","d":"夸克网盘"},{"n":"10节课学会美食短视频脚本创作及文案写作","u":"https://pan.quark.cn/s/0c6759cd6e4d","c":"副业变现","d":"夸克网盘"},{"n":"国外游戏全自动搬砖，单号日入150","u":"https://pan.quark.cn/s/87757fb3e8b7","c":"副业变现","d":"夸克网盘"},{"n":"各种平台无限打金玩法","u":"https://pan.quark.cn/s/78e5c2849f49","c":"副业变现","d":"夸克网盘"},{"n":"做LOL陪玩月入3w+（附接单流程）","u":"https://pan.quark.cn/s/60f438b7568b","c":"副业变现","d":"夸克网盘"},{"n":"2024闲鱼起店课程","u":"https://pan.quark.cn/s/bf155a0e991a","c":"副业变现","d":"夸克网盘"},{"n":"2026闲鱼无货源实战","u":"https://pan.quark.cn/s/0b0090592e4b","c":"副业变现","d":"夸克网盘"},{"n":"闲鱼买卖折扣卡项目","u":"https://pan.quark.cn/s/ee614aa7163d","c":"副业变现","d":"夸克网盘"},{"n":"99套常见小吃配方+创业落地指南","u":"https://pan.quark.cn/s/7fc7f01d12d9","c":"副业变现","d":"夸克网盘"},{"n":"创业资料小吃美食教程（522道）","u":"https://pan.quark.cn/s/6d8c9f81beb3","c":"副业变现","d":"夸克网盘"},{"n":"早餐面食面点小吃配方大全","u":"https://pan.quark.cn/s/7a8463ecfa45","c":"副业变现","d":"夸克网盘"},{"n":"一人公司实战全课：36种起盘赚钱计划","u":"https://pan.quark.cn/s/3948873f4925","c":"副业变现","d":"夸克网盘"},{"n":"一人公司商业闭环","u":"https://pan.quark.cn/s/646c79366839","c":"副业变现","d":"夸克网盘"},{"n":"生财有术大航海近期全套教程","u":"https://pan.quark.cn/s/60fe531caf6b","c":"副业变现","d":"夸克网盘"},{"n":"《破局俱乐部》大航海","u":"https://pan.quark.cn/s/97f72dbfe473","c":"副业变现","d":"夸克网盘"},{"n":"「生财有术」精选项目","u":"https://pan.quark.cn/s/f9f1548134cd","c":"副业变现","d":"夸克网盘"},{"n":"抖音清华大学博士李一舟互联网创业课（112集+资料文档）","u":"https://pan.quark.cn/s/eacf6edf271d","c":"副业变现","d":"夸克网盘"},{"n":"微信小程序入门与实战","u":"https://pan.quark.cn/s/2241724a4d39","c":"副业变现","d":"夸克网盘"},{"n":"经典粤语歌曲800首","u":"https://pan.quark.cn/s/a5e50e720d10","c":"音乐资源","d":"夸克网盘"},{"n":"华语经典甄选423首无损合集","u":"https://pan.quark.cn/s/d87628f6fdae","c":"音乐资源","d":"夸克网盘"},{"n":"1500首经典流行金曲","u":"https://pan.baidu.com/s/1EimS3W88TOs2d3hhzCD02Q?pwd=hwjq","c":"音乐资源","d":"百度网盘"},{"n":"天后巨星邓紫棋 经典歌曲无损大合集","u":"https://pan.quark.cn/s/41e0c9d66bd3","c":"音乐资源","d":"夸克网盘"},{"n":"DTS环绕立体声无损纯音乐试音碟","u":"https://pan.baidu.com/s/1rm6cUlAbe6wR6Xuk-bnjUQ?pwd=hwjq","c":"音乐资源","d":"百度网盘"},{"n":"配乐大师无损APE","u":"https://pan.baidu.com/s/1fbHthYQsIqLugNkQLhWDYQ?pwd=hwjq","c":"音乐资源","d":"百度网盘"},{"n":"无损音乐试音合集","u":"https://pan.baidu.com/s/1waSu2mHcOH5JFTpPOk7o3Q?pwd=hwjq","c":"音乐资源","d":"百度网盘"},{"n":"汽车环绕立体音乐","u":"https://pan.baidu.com/s/13AjEDYO9z5j33RXt2v7zoQ?pwd=hwjq","c":"音乐资源","d":"百度网盘"},{"n":"电视背景音乐","u":"https://pan.baidu.com/s/1CRsSRM8bUJAzyoAf6U-jBQ?pwd=hwjq","c":"音乐资源","d":"百度网盘"},{"n":"经典音乐TV","u":"https://pan.baidu.com/s/1khNpKHwaADmyvGiPo8bftw?pwd=hwjq","c":"音乐资源","d":"百度网盘"},{"n":"少年全知识文史天梯","u":"https://pan.quark.cn/s/a8f66101fb9f","c":"小学教育","d":"夸克网盘"},{"n":"图灵程序设计丛书：大规模数据处理入门与实战（套装全10册）","u":"https://pan.quark.cn/s/c9e36e4cdb5a","c":"行业书籍","d":"夸克网盘"},{"n":"修图变现课 10秒修出高点赞照片","u":"https://pan.quark.cn/s/71fcdfa999b6","c":"副业变现","d":"夸克网盘"},{"n":"英语六级备考攻略｜零基础到六级（听力 阅读 写作+免费视频课程）","u":"https://pan.quark.cn/s/2b0486bde930","c":"语言学习","d":"夸克网盘"},{"n":"美国百科全书","u":"https://pan.quark.cn/s/e1e071327f2d","c":"历史地理","d":"夸克网盘"},{"n":"《大师写给你的科学通识课》（套装共6册）","u":"https://pan.quark.cn/s/3ef3f1b21562","c":"行业书籍","d":"夸克网盘"},{"n":"《萨特著作合集》","u":"https://pan.quark.cn/s/6a5f1cbdcf86","c":"哲学思想","d":"夸克网盘"}];
+const CATEGORIES=[...new Set(DATA.map(r=>r.c))].sort();
+const SUGGEST_KEYWORDS=['英语启蒙','幼小衔接','中医','副业','AI提示词','数学启蒙','瑜伽','理财','摄影','小说','电影','Excel','专升本','针灸','古籍','股票'];
+
+document.getElementById('totalCount').textContent=DATA.length;
+
+// Render category filters
+const filtersEl=document.getElementById('filters');
+const allTag=document.createElement('span');
+allTag.className='filter-tag active';
+allTag.textContent='全部';
+allTag.onclick=()=>selectCategory(null);
+filtersEl.appendChild(allTag);
+CATEGORIES.forEach(c=>{
+  const tag=document.createElement('span');
+  tag.className='filter-tag';
+  tag.textContent=c;
+  tag.onclick=()=>selectCategory(c);
+  filtersEl.appendChild(tag);
+});
+
+// Render suggestions
+const sugEl=document.getElementById('suggestions');
+SUGGEST_KEYWORDS.forEach(k=>{
+  const chip=document.createElement('span');
+  chip.className='suggest-chip';
+  chip.textContent=k;
+  chip.onclick=()=>{document.getElementById('searchInput').value=k;doSearch();};
+  sugEl.appendChild(chip);
+});
+
+let activeCategory=null;
+function selectCategory(c){
+  activeCategory=c;
+  document.querySelectorAll('.filter-tag').forEach(t=>{
+    t.classList.toggle('active',t.textContent===(c||'全部'));
+  });
+  doSearch();
+}
+
+// Fuzzy search
+function fuzzyMatch(text,query){
+  if(!query)return true;
+  const q=query.toLowerCase();
+  const t=text.toLowerCase();
+  // Direct substring match
+  if(t.includes(q))return{match:true,score:100};
+  // Pinyin initial match for common patterns
+  // Each char match with gap allowed
+  let qi=0,score=0;
+  for(let i=0;i<t.length&&qi<q.length;i++){
+    if(t[i]===q[qi]){score+=10-(i>0?1:0);qi++;}
+  }
+  if(qi===q.length)return{match:true,score:score};
+  return{match:false,score:0};
+}
+
+function highlightText(text,query){
+  if(!query)return text;
+  const q=query.toLowerCase();
+  const t=text.toLowerCase();
+  const idx=t.indexOf(q);
+  if(idx===-1)return text;
+  return text.slice(0,idx)+'<mark>'+text.slice(idx,idx+q.length)+'</mark>'+text.slice(idx+q.length);
+}
+
+function getDiskTag(d){
+  if(d.includes('夸克'))return'<span class="result-tag tag-quark">夸克网盘</span>';
+  if(d.includes('百度'))return'<span class="result-tag tag-baidu">百度网盘</span>';
+  if(d.includes('UC'))return'<span class="result-tag tag-uc">UC网盘</span>';
+  return'<span class="result-tag tag-other">'+d+'</span>';
+}
+
+let searchTimer=null;
+const input=document.getElementById('searchInput');
+input.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(doSearch,200);});
+
+function doSearch(){
+  const query=input.value.trim();
+  const emptyEl=document.getElementById('emptyState');
+  const resultsEl=document.getElementById('results');
+  const statsEl=document.getElementById('stats');
+  
+  let filtered=DATA;
+  if(activeCategory){
+    filtered=filtered.filter(r=>r.c===activeCategory);
+  }
+  
+  let results=[];
+  if(query){
+    filtered.forEach(r=>{
+      const m1=fuzzyMatch(r.n,query);
+      const m2=fuzzyMatch(r.c,query);
+      if(m1.match||m2.match){
+        results.push({r,score:Math.max(m1.score,m2.score)+(m1.match&&m2.match?50:0)});
+      }
+    });
+    results.sort((a,b)=>b.score-a.score);
+    results=results.map(x=>x.r);
+  }else{
+    results=filtered;
+  }
+  
+  if(results.length===0&&query){
+    emptyEl.style.display='block';
+    emptyEl.innerHTML='<div class="empty-icon">😕</div><p>没有找到"'+query+'"相关的资源</p><div class="suggestions"><span class="suggest-chip" onclick="document.getElementById(\'searchInput\').value=\'\';doSearch();">清空搜索</span></div>';
+    resultsEl.style.display='none';
+    statsEl.innerHTML='';
+    return;
+  }
+  
+  if(results.length===0&&!query){
+    emptyEl.style.display='block';
+    emptyEl.innerHTML='<div class="empty-icon">💡</div><p>试试搜索：英语、数学、中医、副业…</p><div class="suggestions" id="suggestions"></div>';
+    resultsEl.style.display='none';
+    statsEl.innerHTML='';
+    // Re-render suggestions
+    const newSug=emptyEl.querySelector('.suggestions');
+    SUGGEST_KEYWORDS.forEach(k=>{
+      const chip=document.createElement('span');
+      chip.className='suggest-chip';
+      chip.textContent=k;
+      chip.onclick=()=>{document.getElementById('searchInput').value=k;doSearch();};
+      newSug.appendChild(chip);
+    });
+    return;
+  }
+  
+  emptyEl.style.display='none';
+  resultsEl.style.display='flex';
+  statsEl.innerHTML=query?`找到 <span>${results.length}</span> 个与"${query}"相关的资源`:`共 <span>${results.length}</span> 个资源`;
+  
+  // Render top 50 results
+  const show=results.slice(0,50);
+  resultsEl.innerHTML=show.map(r=>{
+    const name=query?highlightText(r.n,query):r.n;
+    return`<a class="result-card" href="${r.u}" target="_blank" rel="noopener">
+      <div class="result-name">${name}</div>
+      <div class="result-meta">
+        <span class="result-tag tag-category">${r.c}</span>
+        ${getDiskTag(r.d)}
+      </div>
+    </a>`;
+  }).join('');
+  
+  if(results.length>50){
+    resultsEl.innerHTML+=`<div style="text-align:center;color:#8f959e;font-size:13px;padding:12px">还有 ${results.length-50} 个结果，请缩小搜索范围</div>`;
+  }
+}
+</script>
+</body>
+</html>
