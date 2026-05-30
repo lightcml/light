@@ -327,7 +327,7 @@ a { text-decoration: none; color: inherit; }
   height: 52px;
   border: 2px solid #e5e6eb;
   border-radius: 14px;
-  padding: 0 48px 0 20px;
+  padding: 0 80px 0 20px;
   font-size: 16px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -339,6 +339,8 @@ a { text-decoration: none; color: inherit; }
   background: #fff;
 }
 .search-box-wrap input::placeholder { color: #c0c4cc; }
+.search-btn { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:linear-gradient(135deg,#3370ff,#667eea); color:#fff; border:none; border-radius:10px; padding:8px 18px; font-size:14px; cursor:pointer; }
+.search-btn:hover { opacity:0.85; }
 .search-box-wrap svg {
   position: absolute; right: 16px; top: 50%;
   transform: translateY(-50%);
@@ -452,7 +454,7 @@ a { text-decoration: none; color: inherit; }
     <h1 class="hero-title">旅图资源</h1>
     <p class="hero-desc">精选学习资料与优质资源合集</p>
     <div class="hero-search-box">
-      <input type="text" placeholder="搜索资源…" onfocus="showSearch();this.blur();" readonly>
+      <input id="heroSearch" type="text" placeholder="输入关键词，按回车搜索…" onkeydown="if(event.keyCode===13){document.getElementById('searchInput').value=this.value;showSearch();doSearch();}">
       <svg class="hero-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </div>
   </div>
@@ -1297,8 +1299,8 @@ a { text-decoration: none; color: inherit; }
   <div class="search-header">
     <h1>🔍 搜索资源</h1>
     <div class="search-box-wrap">
-      <input id="searchInput" type="text" placeholder="输入关键词搜索…" autofocus>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="输入关键词搜索…" autofocus onkeydown="if(event.keyCode===13)doSearch()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="right:90px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><button class="search-btn" onclick="doSearch()">搜索</button>
     </div>
     <div class="filters" id="filters">
 <span class="filter-tag active" onclick="selectFilter(this,null)">全部</span>
@@ -1431,6 +1433,7 @@ function getDiskTag(d){
   return'<span class="result-tag tag-other">'+d+'</span>';
 }
 
+// Debounced auto-search
 let searchTimer=null;
 document.getElementById('searchInput').addEventListener('input',()=>{
   clearTimeout(searchTimer);
